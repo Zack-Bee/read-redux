@@ -27,13 +27,11 @@ import compose from './compose'
  * @returns {Function} A store enhancer applying the middleware.
  * 一个使用了middleware的store enhancer
  */
-export default function applyMiddleware(...middlewares) {
+export default function applyMiddleware(...middlewares) { // 返回强化后的store
   return createStore => (...args) => {
     const store = createStore(...args)
 
-    // 不能理解为什么要这样写, js是单线程的, 运行下面内容时js线程不会运行其他东西吧
-    // 在https://github.com/ecmadao/Coding-Guide/blob/master/Notes/React/Redux/Redux%E5%85%A5%E5%9D%91%E8%BF%9B%E9%98%B6-%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90.md
-    // 这个里面, 源码没有下面这样写, 而是var dispatch就完了
+    // 在使用middlewares的时候调用dispatch抛出错误
     let dispatch = () => {
       throw new Error(
         `Dispatching while constructing your middleware is not allowed. ` +
@@ -45,9 +43,18 @@ export default function applyMiddleware(...middlewares) {
       getState: store.getState,
       dispatch: (...args) => dispatch(...args)
     }
+
+    /**
+     * 书写的middleware原本都是store => next => action => {}，经此之后能够通过闭包访问到{ getState, dispatch }了
+     * 变为了next => action => {}
+     */
     const chain = middlewares.map(middleware => middleware(middlewareAPI))
 
-    // 经过中间件处理后的dispatch
+    // 经过中间件处理后的dispatch，强化了dispatch
+    /**
+     * 主要通过reduce，将a: next => action => {}, b: next => action => {}
+     * 变为一个函数a(b(c(d(...args))))，d接收store.dispatch作为next参数，d(store.dispatch)作为c的next参数
+     */
     dispatch = compose(...chain)(store.dispatch)
 
     // 返回生成的store

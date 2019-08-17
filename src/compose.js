@@ -1,4 +1,5 @@
 // 用于组合函数, 例如compose(a, b, c)等于(...args) => a(b(c(...args)))
+// 用于组合enhancer，
 
 /**
  * Composes single-argument functions from right to left. The rightmost
@@ -6,7 +7,7 @@
  * the resulting composite function.
  * 从右到左组合成一个单参数(single-argument)函数. 最右端的函数能够接收多个参数,
  * 因为它为最终的综合函数提供了信息.
- * 
+ *
  * @param {...Function} funcs The functions to compose.
  * 要组合的函数.
  * @returns {Function} A function obtained by composing the argument functions

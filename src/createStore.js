@@ -35,7 +35,7 @@ import isPlainObject from './utils/isPlainObject'
  * is `applyMiddleware()`.
  * store enhancer(store扩展器?). 你可以可选地指定它来使用第三方功能, 比如middleware(中间件),
  * time travel(时间旅行), persistance(持久化)等等, 来扩展store. Redux自带的唯一的扩展是
- * applyMiddle(). 
+ * applyMiddle().
  *
  * @returns {Store} A Redux store that lets you read the state, dispatch actions
  * and subscribe to changes.
@@ -70,6 +70,8 @@ export default function createStore(reducer, preloadedState, enhancer) {
   let isDispatching = false
 
   // 确保NextListeners可以突变
+  // 在执行listener时，如果subscribe或者unscbscribe都能保证当前的listener队列执行完毕
+  // 发生的更改在nextListeners中
   function ensureCanMutateNextListeners() {
     if (nextListeners === currentListeners) {
       nextListeners = currentListeners.slice()
@@ -128,7 +130,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
    *
    * @param {Function} listener A callback to be invoked on every dispatch.
    * 一个在每次dispatch时触发的回调函数
-   * 
+   *
    * @returns {Function} A function to remove this change listener.
    * 一个移除这个change listener的函数
    */
@@ -242,7 +244,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
     // 遍历调用listener
     const listeners = (currentListeners = nextListeners)
     for (let i = 0; i < listeners.length; i++) {
-      const listener = listeners[i] // **不懂为什么这个地方要这么写**
+      const listener = listeners[i]
       listener()
     }
 
@@ -258,11 +260,11 @@ export default function createStore(reducer, preloadedState, enhancer) {
    * implement a hot reloading mechanism for Redux.
    * 如果你的app使用了代码拆分了并且你想要动态地加载一些reducers, 或者为Redux使用了
    * 热更新(hot reloading), 那么你可能会需要这个函数.
-   * 
+   *
    *
    * @param {Function} nextReducer The reducer for the store to use instead.
    * 你想要store使用的reducer
-   * 
+   *
    * @returns {void}
    */
   function replaceReducer(nextReducer) {
@@ -271,7 +273,7 @@ export default function createStore(reducer, preloadedState, enhancer) {
     }
 
     currentReducer = nextReducer
-    dispatch({ type: ActionTypes.REPLACE })
+    dispatch({ type: ActionTypes.REPLACE }) // 使用nextReducer重新计算state
   }
 
   /**
